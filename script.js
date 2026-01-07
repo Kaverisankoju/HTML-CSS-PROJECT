@@ -149,6 +149,32 @@ function saveUsers(users) {
     localStorage.setItem("users", JSON.stringify(users));
 }
 
+function validatePassword(password) {
+
+    if (password.length < 8 || password.length > 15) {
+        return "Password must be 8–15 characters long.";
+    }
+
+    if (!/[A-Z]/.test(password)) {
+        return "Password must contain at least one uppercase letter.";
+    }
+
+    if (!/[a-z]/.test(password)) {
+        return "Password must contain at least one lowercase letter.";
+    }
+
+    if (!/[0-9]/.test(password)) {
+        return "Password must contain at least one number.";
+    }
+
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+        return "Password must contain at least one special character.";
+    }
+
+    return ""; // valid password
+}
+
+
 /******** REGISTER ********/
 function registerUser() {
     let user = document.getElementById("regUser").value.trim();
@@ -158,16 +184,26 @@ function registerUser() {
 
     error.textContent = "";
 
+    // 1️⃣ Check empty fields
     if (!user || !pass || !confirm) {
         error.textContent = "All fields required.";
         return;
     }
 
+    // 2️⃣ Password strength validation
+    let passError = validatePassword(pass);
+    if (passError !== "") {
+        error.textContent = passError;
+        return;
+    }
+
+    // 3️⃣ Confirm password match
     if (pass !== confirm) {
         error.textContent = "Passwords do not match.";
         return;
     }
 
+    // 4️⃣ Check if user already exists
     let users = loadUsers();
     let exists = users.find(u => u.username === user);
 
@@ -177,6 +213,7 @@ function registerUser() {
         return;
     }
 
+    // 5️⃣ Save user
     users.push({
         username: user,
         password: pass,
@@ -188,6 +225,7 @@ function registerUser() {
     alert("Registration successful!");
     showPage("loginPage");
 }
+
 
 // GUEST LOGIN
 
@@ -246,19 +284,30 @@ function resetPassword() {
     let newPass = document.getElementById("forgotNewPass").value.trim();
     let error = document.getElementById("forgotError");
 
+    error.style.color = "red";
     error.textContent = "";
 
     let users = loadUsers();
     let user = users.find(u => u.username === username);
 
+    // 1️⃣ Check user exists
     if (!user) {
         error.textContent = "User not found.";
         return;
     }
 
+    // 2️⃣ Validate new password
+    let passError = validatePassword(newPass);
+    if (passError !== "") {
+        error.textContent = passError;
+        return;
+    }
+
+    // 3️⃣ Save new password
     user.password = newPass;
     saveUsers(users);
 
+    // 4️⃣ Success message
     error.style.color = "green";
     error.textContent = "Password changed successfully!";
 
@@ -267,6 +316,7 @@ function resetPassword() {
         document.getElementById("loginUser").value = username;
     }, 1400);
 }
+
 
 function goToLogin() { showPage("loginPage"); }
 function goToRegister() { showPage("registerPage"); }
